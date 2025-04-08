@@ -8,4 +8,6 @@ Route::get('/', function () {
 });
 
 Route::get('/ai', [AIController::class, 'index'])->name('ai.index');
-Route::post('/ai/generate', [AIController::class, 'generateText'])->name('ai.generate');
+Route::middleware(['throttle:5,1'])
+    ->post('/ai/generate', [AIController::class, 'generateText'])
+    ->name('ai.generate');
