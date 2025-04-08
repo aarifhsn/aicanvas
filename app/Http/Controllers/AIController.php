@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use OpenAI;
+use App\Services\HuggingFaceService;
 
 class AIController extends Controller
 {
-    protected $client;
+    protected $huggingFaceService;
 
-    public function __construct()
+    public function __construct(HuggingFaceService $huggingFaceService)
     {
-        $this->client = OpenAI::client(env('OPENAI_API_KEY'));
+        $this->huggingFaceService = $huggingFaceService;
     }
 
     public function index()
@@ -26,16 +26,11 @@ class AIController extends Controller
         ]);
 
         try {
-            $response = $this->client->completions()->create([
-                'model' => 'gpt-3.5-turbo-instruct',
-                'prompt' => $request->prompt,
-                'max_tokens' => 150,
-                'temperature' => 0.7,
-            ]);
+            $result = $this->huggingFaceService->generateText($request->prompt);
 
             return response()->json([
                 'success' => true,
-                'result' => $response->choices[0]->text
+                'result' => $result
             ]);
         } catch (\Exception $e) {
             return response()->json([
