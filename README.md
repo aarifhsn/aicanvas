@@ -4,13 +4,13 @@ A simple and modern web application that generates AI-powered text content using
 
 ## Features
 
--   🤖 AI text generation powered by HuggingFace API
--   🌓 Dark/Light mode toggle with persistent user preference
--   🎨 Clean, modern UI built with Tailwind CSS
--   ⚡ Real-time AJAX text generation
--   🔄 Fallback responses for API failures
--   📱 Fully responsive design
--   🔒 CSRF protection for all requests
+-   AI text generation powered by HuggingFace API
+-   Dark/Light mode toggle with persistent user preference
+-   Clean, modern UI built with Tailwind CSS
+-   Real-time AJAX text generation
+-   Fallback responses for API failures
+-   Fully responsive design
+-   CSRF protection for all requests
 
 ## Requirements
 
