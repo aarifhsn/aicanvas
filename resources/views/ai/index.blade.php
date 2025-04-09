@@ -60,18 +60,6 @@
                                     id="prompt" name="prompt" rows="3" required></textarea>
                             </div>
 
-                            <div class="mb-4">
-                                <label for="type"
-                                    class="block text-gray-700 dark:text-gray-300 font-medium mb-2">Content
-                                    type:</label>
-                                <select id="type" name="type"
-                                    class="w-full px-3 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring focus:border-blue-300">
-                                    <option value="general">General</option>
-                                    <option value="linkedin">LinkedIn Post</option>
-                                    <option value="summary">Summary</option>
-                                </select>
-                            </div>
-
                             <button type="submit"
                                 class="px-4 py-2 bg-indigo-600 dark:bg-indigo-700 text-white rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-800 focus:outline-none focus:ring focus:ring-indigo-200">Generate
                                 Text</button>

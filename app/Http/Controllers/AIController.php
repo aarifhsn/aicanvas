@@ -23,13 +23,11 @@ class AIController extends Controller
     {
         $request->validate([
             'prompt' => 'required|string|max:1000',
-            'type' => 'sometimes|string|in:general,linkedin,summary'
         ]);
 
         try {
             $result = $this->huggingFaceService->generateText(
                 $request->prompt,
-                $request->type ?? 'general'
             );
 
             return response()->json([

@@ -15,16 +15,13 @@ class HuggingFaceService
         $this->model = env('HUGGINGFACE_MODEL', 'mistralai/Mixtral-8x7B-Instruct-v0.1');
     }
 
-    public function generateText($prompt, $type = 'general')
+    public function generateText($prompt)
     {
-        // Format prompt based on type
-        $formattedPrompt = $this->formatPrompt($prompt, $type);
-
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->apiToken,
             'Content-Type' => 'application/json',
         ])->post('https://api-inference.huggingface.co/models/' . $this->model, [
-                    'inputs' => $formattedPrompt,
+                    'inputs' => $prompt,
                     'parameters' => [
                         'max_length' => 300,
                         'temperature' => 0.8,
@@ -34,22 +31,10 @@ class HuggingFaceService
 
         if ($response->successful()) {
             $text = $response->json(0)['generated_text'] ?? 'No response generated';
-            return $this->cleanResponse($text, $formattedPrompt);
+            return $this->cleanResponse($text, $prompt);
         }
 
         return 'Error: ' . ($response->json('error') ?? 'Unknown error');
-    }
-
-    private function formatPrompt($prompt, $type)
-    {
-        switch ($type) {
-            case 'linkedin':
-                return "Write a professional LinkedIn post about {$prompt}. The post should be engaging, informative, and appropriate for a professional audience.";
-            case 'summary':
-                return "Summarize the following: {$prompt}";
-            default:
-                return $prompt;
-        }
     }
 
     private function cleanResponse($text, $originalPrompt)
