@@ -26,6 +26,17 @@
                                     class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:ring focus:border-blue-300"
                                     id="prompt" name="prompt" rows="3" required></textarea>
                             </div>
+
+                            <div class="mb-4">
+                                <label for="type" class="block text-gray-700 font-medium mb-2">Content type:</label>
+                                <select id="type" name="type"
+                                    class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:ring focus:border-blue-300">
+                                    <option value="general">General</option>
+                                    <option value="linkedin">LinkedIn Post</option>
+                                    <option value="summary">Summary</option>
+                                </select>
+                            </div>
+
                             <button type="submit"
                                 class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:ring-indigo-200">Generate
                                 Text</button>
@@ -33,7 +44,8 @@
 
                         <div class="mt-6">
                             <h5 class="text-lg font-medium text-gray-700 mb-2">Result:</h5>
-                            <div id="result" class="p-4 bg-gray-50 border border-gray-200 rounded-lg min-h-20">
+                            <div id="result"
+                                class="p-4 bg-gray-50 border border-gray-200 rounded-lg min-h-20 whitespace-pre-line">
                                 <!-- AI response will appear here -->
                             </div>
                         </div>
@@ -56,13 +68,16 @@
                 e.preventDefault();
 
                 const prompt = $('#prompt').val();
+                const type = $('#type').val();
+
                 $('#result').html('<div class="flex flex-col items-center justify-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div><div class="mt-2">Processing...</div></div>');
 
                 $.ajax({
                     url: '{{ route("ai.generate") }}',
                     method: 'POST',
                     data: {
-                        prompt: prompt
+                        prompt: prompt,
+                        type: type
                     },
                     success: function (response) {
                         if (response.success) {

@@ -23,20 +23,40 @@ class AIController extends Controller
     {
         $request->validate([
             'prompt' => 'required|string|max:1000',
+            'type' => 'sometimes|string|in:general,linkedin,summary'
         ]);
 
         try {
-            $result = $this->huggingFaceService->generateText($request->prompt);
+            $result = $this->huggingFaceService->generateText(
+                $request->prompt,
+                $request->type ?? 'general'
+            );
 
             return response()->json([
                 'success' => true,
                 'result' => $result
             ]);
         } catch (\Exception $e) {
+            // Fallback code
+            $result = $this->getFallbackResponse($request->prompt);
+
             return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+                'success' => true,
+                'result' => $result,
+                'fallback' => true
+            ]);
         }
+    }
+
+    private function getFallbackResponse($prompt)
+    {
+        $responses = [
+            "I'm sorry, but I'm having trouble processing that request right now.",
+            "That's an interesting question. Let me think about that for a moment...",
+            "I'd love to help with that, but my knowledge base is currently limited in this area.",
+            "I understand you're asking about " . substr($prompt, 0, 20) . "... This is an area I'm still learning about."
+        ];
+
+        return $responses[array_rand($responses)];
     }
 }
