@@ -34,5 +34,23 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'huggingface' => [
+        'api_token' => env('HUGGINGFACE_API_TOKEN'),
+        'model' => env('HUGGINGFACE_MODEL', 'mistralai/Mixtral-8x7B-Instruct-v0.1'),
+    ],
+
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-3.5-flash'),
+    ],
+
+    'ai' => [
+        'default' => env('AI_DEFAULT_PROVIDER', 'gemini'),
+    ],
+
+    'groq' => [
+        'key' => env('GROQ_API_KEY'),
+        'model' => env('GROQ_MODEL', 'openai/gpt-oss-120b'),
+    ],
 
 ];

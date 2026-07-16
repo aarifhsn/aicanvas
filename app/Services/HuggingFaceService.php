@@ -11,16 +11,17 @@ class HuggingFaceService
 
     public function __construct()
     {
-        $this->apiToken = env('HUGGINGFACE_API_TOKEN');
-        $this->model = env('HUGGINGFACE_MODEL', 'mistralai/Mixtral-8x7B-Instruct-v0.1');
+        $this->apiToken = config('services.huggingface.api_token');
+        $this->model = config('services.huggingface.model', 'mistralai/Mixtral-8x7B-Instruct-v0.1');
     }
 
     public function generateText($prompt)
     {
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->apiToken,
-            'Content-Type' => 'application/json',
-        ])->post('https://api-inference.huggingface.co/models/' . $this->model, [
+        $response = Http::timeout(60)->
+            withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiToken,
+                'Content-Type' => 'application/json',
+            ])->post('https://api-inference.huggingface.co/models/' . $this->model, [
                     'inputs' => $prompt,
                     'parameters' => [
                         'max_length' => 300,
@@ -30,7 +31,8 @@ class HuggingFaceService
                 ]);
 
         if ($response->successful()) {
-            $text = $response->json(0)['generated_text'] ?? 'No response generated';
+            $result = $response->json();
+            $text = $result[0]['generated_text'] ?? 'No response generated';
             return $this->cleanResponse($text, $prompt);
         }
 
