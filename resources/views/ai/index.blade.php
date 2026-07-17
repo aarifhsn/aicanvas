@@ -1,131 +1,131 @@
-<!DOCTYPE html>
-<html lang="en" class="light">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>AI Text Generator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: { extend: {} }
-        }
-
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    </script>
-</head>
-
-<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
-
-        <!-- Page Title -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">AI Text Generator</h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-2">Generate content with artificial intelligence</p>
+@section('content')
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div class="bg-indigo-600 dark:bg-indigo-800 text-white px-6 py-4 text-lg font-medium">
+            AI Text Generation
         </div>
 
-        <!-- Dark Mode Toggle -->
-        <div class="flex justify-end mb-4">
-            <button id="darkModeToggle"
-                class="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white flex items-center transition-colors">
-                <span id="darkModeIcon" class="mr-2">🌙</span>
-                <span id="darkModeText">Dark Mode</span>
-            </button>
-        </div>
+        <div class="p-6">
+            <form id="aiForm">
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-            <div class="bg-indigo-600 dark:bg-indigo-800 text-white px-6 py-4 text-lg font-medium">
-                AI Text Generation
-            </div>
+                <!-- Step 1: Prompt -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                        <label class="block text-gray-700 dark:text-gray-300 font-medium">1. Write your prompt</label>
+                        <div id="modeToggle"
+                            class="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 p-0.5 bg-gray-100 dark:bg-gray-900">
+                            <button type="button" data-mode="freeform"
+                                class="mode-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors text-gray-600 dark:text-gray-300">
+                                ✏️ Free-form
+                            </button>
+                            <button type="button" data-mode="template"
+                                class="mode-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors text-gray-600 dark:text-gray-300">
+                                📋 Guided
+                            </button>
+                        </div>
+                    </div>
 
-            <div class="p-6">
-                <form id="aiForm">
+                    <!-- Free-form textarea -->
+                    <textarea id="prompt" name="prompt" rows="4" placeholder="Describe what you want the AI to write..."
+                        class="w-full px-3 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring focus:border-blue-300"></textarea>
 
-                    <!-- Quick Templates -->
-                    <div class="mb-6">
-                        <label class="block text-gray-700 dark:text-gray-300 font-medium mb-2">Quick templates:</label>
-                        <div id="templateChips" class="flex flex-wrap gap-2"></div>
+                    <!-- Guided template builder -->
+                    <div id="templateBuilder" class="hidden">
+                        <div id="templateChips" class="flex flex-wrap gap-2 mb-4"></div>
                         <div id="templateFields"
-                            class="hidden space-y-3 mt-3 p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg">
+                            class="space-y-3 p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg mb-3">
+                        </div>
+                        <div>
+                            <label
+                                class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">
+                                Prompt preview — edit if you like
+                            </label>
+                            <textarea id="templatePreview" rows="4"
+                                placeholder="Choose a template above — your prompt will build itself here."
+                                class="w-full px-3 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring focus:border-blue-300"></textarea>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Prompt -->
-                    <div class="mb-4">
-                        <label for="prompt" class="block text-gray-700 dark:text-gray-300 font-medium mb-2">
-                            Enter your prompt:
-                        </label>
-                        <textarea
-                            class="w-full px-3 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring focus:border-blue-300"
-                            id="prompt" name="prompt" rows="3" required></textarea>
-                    </div>
+                <!-- Step 2: Output options -->
+                <div class="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <label class="block text-gray-700 dark:text-gray-300 font-medium mb-3">2. Output options</label>
 
-                    <!-- Compare Mode -->
-                    <div class="mb-5 flex flex-wrap items-center gap-4">
-                        <label class="flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer">
-                            <input type="checkbox" id="compareMode"
-                                class="rounded text-indigo-600 focus:ring-indigo-500">
-                            <span>Compare Mode</span>
-                        </label>
-                        <div id="providerOptions" class="hidden flex flex-wrap items-center gap-4">
+                    <label class="flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer">
+                        <input type="checkbox" id="compareMode" class="rounded text-indigo-600 focus:ring-indigo-500">
+                        <span>Compare multiple models side-by-side</span>
+                    </label>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 ml-6">See how each model responds to the same
+                        prompt, with response time for each.</p>
+
+                    <div id="providerOptions" class="hidden mt-3 pl-6">
+                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-2">Models to compare:</label>
+                        <div class="flex flex-wrap items-center gap-4">
                             <label
                                 class="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
-                                <input type="checkbox"
-                                    class="provider-check rounded text-indigo-600 focus:ring-indigo-500" value="gemini"
-                                    checked> Gemini
+                                <input type="checkbox" class="provider-check rounded text-indigo-600 focus:ring-indigo-500"
+                                    value="gemini" checked> Gemini
                             </label>
                             <label
                                 class="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
-                                <input type="checkbox"
-                                    class="provider-check rounded text-indigo-600 focus:ring-indigo-500" value="groq">
-                                Groq
+                                <input type="checkbox" class="provider-check rounded text-indigo-600 focus:ring-indigo-500"
+                                    value="groq"> Groq
                             </label>
                         </div>
                     </div>
+                </div>
 
-                    <div class="flex items-center gap-3">
-                        <button type="submit" id="submitBtn"
-                            class="px-4 py-2 bg-indigo-600 dark:bg-indigo-700 text-white rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-800 focus:outline-none focus:ring focus:ring-indigo-200 transition-colors">
-                            Generate Text
-                        </button>
-                        <button type="button" id="clearBtn"
-                            class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm">
-                            Clear
-                        </button>
-                    </div>
-                </form>
+                <div class="flex items-center gap-3">
+                    <button type="submit" id="submitBtn"
+                        class="px-4 py-2 bg-indigo-600 dark:bg-indigo-700 text-white rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-800 focus:outline-none focus:ring focus:ring-indigo-200 transition-colors">
+                        Generate Text
+                    </button>
+                    <button type="button" id="clearBtn"
+                        class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm">
+                        Clear
+                    </button>
+                </div>
 
-                <div class="mt-6">
-                    <h5 id="resultLabel" class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Result:</h5>
-                    <div id="result"
-                        class="p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg min-h-20 whitespace-pre-line text-gray-800 dark:text-gray-200">
-                        <span class="text-gray-400 dark:text-gray-500 italic">Your generated text will appear
-                            here...</span>
+                @guest
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-3">
+                        💡 <a href="{{ route('register') }}" class="text-indigo-600 dark:text-indigo-400 hover:underline">Create
+                            a free account</a> to save your generation history.
+                    </p>
+                @endguest
+            </form>
+
+            <div class="mt-6">
+                <div class="flex items-center justify-between mb-2">
+                    <h5 id="resultLabel" class="text-lg font-medium text-gray-700 dark:text-gray-300">Result:</h5>
+                    <div id="resultActions" class="hidden items-center gap-2">
+                        <button type="button" id="copyBtn"
+                            class="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600">📋
+                            Copy</button>
+                        <button type="button" id="downloadBtn"
+                            class="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600">⬇️
+                            Download</button>
                     </div>
+                </div>
+                <div id="result"
+                    class="p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg min-h-20 prose prose-sm dark:prose-invert max-w-none text-gray-800 dark:text-gray-200">
+                    <span class="text-gray-400 dark:text-gray-500 italic not-prose">Your generated text will appear
+                        here...</span>
                 </div>
             </div>
         </div>
     </div>
+@endsection
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@section('scripts')
     <script>
         let templatesData = {};
         let activeTemplate = null;
-
-        // --- Helpers ---
-        function escapeHtml(str) {
-            return $('<div>').text(str ?? '').html();
-        }
+        let currentMode = 'freeform';
+        let lastResultText = '';
 
         function loadingDots() {
-            return `<div class="flex items-center gap-1 py-1">
+            return `<div class="flex items-center gap-1 py-1 not-prose">
                 <span class="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style="animation-delay:0ms"></span>
                 <span class="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style="animation-delay:150ms"></span>
                 <span class="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style="animation-delay:300ms"></span>
@@ -133,7 +133,40 @@
         }
 
         function resetResult() {
-            $('#result').html('<span class="text-gray-400 dark:text-gray-500 italic">Your generated text will appear here...</span>');
+            $('#result').html('<span class="text-gray-400 dark:text-gray-500 italic not-prose">Your generated text will appear here...</span>');
+            $('#resultActions').addClass('hidden').removeClass('flex');
+            lastResultText = '';
+        }
+
+        function downloadText(filename, text) {
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // --- Mode switching ---
+        function setMode(mode) {
+            currentMode = mode;
+
+            $('.mode-btn').each(function () {
+                const isActive = $(this).data('mode') === mode;
+                $(this)
+                    .toggleClass('bg-indigo-600 text-white shadow-sm', isActive)
+                    .toggleClass('text-gray-600 dark:text-gray-300', !isActive);
+            });
+
+            $('#prompt').toggleClass('hidden', mode !== 'freeform');
+            $('#templateBuilder').toggleClass('hidden', mode !== 'template');
+        }
+
+        function getActivePrompt() {
+            return currentMode === 'freeform'
+                ? $('#prompt').val().trim()
+                : $('#templatePreview').val().trim();
         }
 
         // --- Templates ---
@@ -147,7 +180,6 @@
         function renderChips() {
             const $chips = $('#templateChips');
             $chips.empty();
-            $chips.append(chipButton(null, '✏️', 'Free-form'));
             Object.entries(templatesData).forEach(([key, t]) => $chips.append(chipButton(key, t.icon, t.name)));
         }
 
@@ -167,15 +199,14 @@
             const $fields = $('#templateFields').empty();
 
             if (!key) {
-                $fields.addClass('hidden');
+                $fields.html('<p class="text-sm text-gray-400 dark:text-gray-500 italic">Choose a template above to get started.</p>');
+                $('#templatePreview').val('').attr('placeholder', 'Choose a template above — your prompt will build itself here.');
                 return;
             }
 
             templatesData[key].fields.forEach(field => $fields.append(renderField(field)));
-            $fields.append(`<button type="button" id="insertPromptBtn" class="px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-md text-sm hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors">Insert into prompt</button>`);
-            $fields.removeClass('hidden');
-
-            $('#insertPromptBtn').on('click', () => insertTemplatePrompt(key));
+            $('#templatePreview').attr('placeholder', 'Fill in the fields above — your prompt will build itself here.');
+            regeneratePreview();
         }
 
         function renderField(field) {
@@ -184,94 +215,117 @@
             let input;
 
             if (field.type === 'select') {
-                input = `<select id="${id}" class="${base}">${field.options.map(o => `<option value="${o}">${o}</option>`).join('')}</select>`;
+                input = `<select id="${id}" data-field="${field.name}" class="${base}">${field.options.map(o => `<option value="${o}">${o}</option>`).join('')}</select>`;
             } else if (field.type === 'textarea') {
-                input = `<textarea id="${id}" rows="3" class="${base}" placeholder="${field.placeholder ?? ''}"></textarea>`;
+                input = `<textarea id="${id}" data-field="${field.name}" rows="3" class="${base}" placeholder="${field.placeholder ?? ''}"></textarea>`;
             } else {
-                input = `<input type="text" id="${id}" class="${base}" placeholder="${field.placeholder ?? ''}">`;
+                input = `<input type="text" id="${id}" data-field="${field.name}" class="${base}" placeholder="${field.placeholder ?? ''}">`;
             }
 
-            return `<div><label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">${field.label}</label>${input}</div>`;
+            return `<div><label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">${field.label}${field.required ? ' <span class="text-red-500">*</span>' : ''}</label>${input}</div>`;
         }
 
-        async function insertTemplatePrompt(key) {
-            const fields = {};
-            templatesData[key].fields.forEach(f => { fields[f.name] = $(`#field_${f.name}`).val(); });
+        // Builds the prompt from the current field values. Returns null if a required field is still empty.
+        function buildPromptFromTemplate(key) {
+            const tpl = templatesData[key];
+            if (!tpl) return null;
 
-            const response = await fetch('{{ route("ai.buildPrompt") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                },
-                body: JSON.stringify({ template: key, fields })
+            let hasAllRequired = true;
+            let result = tpl.template;
+
+            tpl.fields.forEach(field => {
+                const value = ($(`#field_${field.name}`).val() || '').trim();
+                if (field.required && !value) hasAllRequired = false;
+                result = result.split(`{${field.name}}`).join(value);
             });
 
-            const data = await response.json();
+            return hasAllRequired ? result : null;
+        }
 
-            if (data.success) {
-                $('#prompt').val(data.prompt).focus();
-                const $btn = $('#insertPromptBtn');
-                const original = $btn.text();
-                $btn.text('Inserted ✓').prop('disabled', true);
-                setTimeout(() => $btn.text(original).prop('disabled', false), 1200);
-            } else {
-                $('#result').html('<div class="text-red-600 dark:text-red-400">' + escapeHtml(data.error) + '</div>');
-            }
+        function regeneratePreview() {
+            if (!activeTemplate) return;
+            const built = buildPromptFromTemplate(activeTemplate);
+            $('#templatePreview').val(built ?? '');
         }
 
         $(document).ready(function () {
-            $.ajaxSetup({
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+
+            setMode('freeform');
+
+            $('.mode-btn').on('click', function () {
+                setMode($(this).data('mode'));
             });
 
-            // Dark mode
-            $('#darkModeToggle').click(function () {
-                const isDarkMode = document.documentElement.classList.toggle('dark');
-                localStorage.setItem('darkMode', isDarkMode);
-                updateDarkModeButton(isDarkMode);
-            });
-
-            function updateDarkModeButton(isDarkMode) {
-                $('#darkModeIcon').text(isDarkMode ? '☀️' : '🌙');
-                $('#darkModeText').text(isDarkMode ? 'Light Mode' : 'Dark Mode');
-            }
-            updateDarkModeButton(document.documentElement.classList.contains('dark'));
+            // Live preview — any field change rebuilds the prompt instantly, no server round-trip
+            $('#templateFields').on('input change', 'input, select, textarea', regeneratePreview);
 
             // Compare Mode toggling
-            function updateModeUI() {
+            function updateCompareUI() {
                 const isCompare = $('#compareMode').is(':checked');
                 $('#providerOptions').toggleClass('hidden', !isCompare);
                 $('#submitBtn').text(isCompare ? 'Compare Models' : 'Generate Text');
                 $('#resultLabel').text(isCompare ? 'Results:' : 'Result:');
             }
-            $('#compareMode').on('change', updateModeUI);
-            updateModeUI();
+            $('#compareMode').on('change', updateCompareUI);
+            updateCompareUI();
 
             // Clear
             $('#clearBtn').on('click', function () {
                 $('#prompt').val('');
-                activeTemplate = null;
-                renderChips();
-                $('#templateFields').addClass('hidden').empty();
+                selectTemplate(null);
+                setMode('freeform');
                 resetResult();
+            });
+
+            // Copy / Download (single mode)
+            $('#copyBtn').on('click', async function () {
+                try {
+                    await navigator.clipboard.writeText(lastResultText);
+                    showToast('Copied to clipboard', 'success');
+                } catch {
+                    showToast('Copy failed', 'error');
+                }
+            });
+
+            $('#downloadBtn').on('click', function () {
+                downloadText('ai-generation.md', lastResultText);
+            });
+
+            $(document).on('click', '.compare-copy', async function () {
+                const text = $(this).data('text');
+                try {
+                    await navigator.clipboard.writeText(text);
+                    showToast('Copied to clipboard', 'success');
+                } catch {
+                    showToast('Copy failed', 'error');
+                }
             });
 
             // Submit
             $('#aiForm').submit(async function (e) {
                 e.preventDefault();
 
-                if (!$('#prompt').val().trim()) return;
+                const prompt = getActivePrompt();
 
-                if ($('#compareMode').is(':checked')) {
-                    return runCompare();
+                if (!prompt) {
+                    showToast(
+                        currentMode === 'freeform'
+                            ? 'Write a prompt before generating.'
+                            : 'Fill in the required fields above before generating.',
+                        'error'
+                    );
+                    return;
                 }
 
-                const prompt = $('#prompt').val();
+                if ($('#compareMode').is(':checked')) {
+                    return runCompare(prompt);
+                }
+
                 const $result = $('#result');
                 const $submitBtn = $('#submitBtn');
 
-                $result.html('<span class="inline-block w-2 h-4 bg-indigo-600 dark:bg-indigo-400 animate-pulse"></span>');
+                $result.html('<span class="inline-block w-2 h-4 bg-indigo-600 dark:bg-indigo-400 animate-pulse not-prose"></span>');
+                $('#resultActions').addClass('hidden').removeClass('flex');
                 $submitBtn.prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
 
                 let fullText = '';
@@ -284,7 +338,7 @@
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
                             'Accept': 'text/event-stream',
                         },
-                        body: JSON.stringify({ prompt })
+                        body: JSON.stringify({ prompt, template: currentMode === 'template' ? activeTemplate : null })
                     });
 
                     if (!response.ok) throw new Error('Request failed with status ' + response.status);
@@ -311,30 +365,36 @@
                             if (payload.done) continue;
 
                             fullText += payload.text;
-                            $result.text(fullText); // .text() keeps this XSS-safe
+                            $result.html(renderMarkdown(fullText));
                         }
                     }
 
-                    if (!fullText) resetResult();
+                    if (!fullText) {
+                        resetResult();
+                    } else {
+                        lastResultText = fullText;
+                        $('#resultActions').removeClass('hidden').addClass('flex');
+                    }
                 } catch (err) {
-                    $result.html('<div class="text-red-600 dark:text-red-400">Error: ' + escapeHtml(err.message) + '</div>');
+                    $result.html('<div class="text-red-600 dark:text-red-400 not-prose">Error: ' + escapeHtml(err.message) + '</div>');
+                    showToast(err.message, 'error');
                 } finally {
                     $submitBtn.prop('disabled', false).removeClass('opacity-50 cursor-not-allowed');
                 }
             });
 
-            async function runCompare() {
-                const prompt = $('#prompt').val();
+            async function runCompare(prompt) {
                 const providers = $('.provider-check:checked').map((_, el) => el.value).get();
                 const $result = $('#result');
                 const $submitBtn = $('#submitBtn');
 
                 if (providers.length === 0) {
-                    $result.html('<div class="text-red-600 dark:text-red-400">Select at least one provider.</div>');
+                    showToast('Select at least one provider.', 'error');
                     return;
                 }
 
                 $result.html(loadingDots());
+                $('#resultActions').addClass('hidden').removeClass('flex');
                 $submitBtn.prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
 
                 try {
@@ -344,33 +404,39 @@
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
                         },
-                        body: JSON.stringify({ prompt, providers })
+                        body: JSON.stringify({ prompt, providers, template: currentMode === 'template' ? activeTemplate : null })
                     });
 
                     if (!response.ok) throw new Error('Request failed with status ' + response.status);
 
                     const data = await response.json();
-                    const cards = Object.entries(data.results).map(([name, r]) => `
-                        <div class="border dark:border-gray-700 rounded-lg p-4">
-                            <div class="flex justify-between mb-2">
+                    const cards = Object.entries(data.results).map(([name, r]) => {
+                        if (!r.success) {
+                            return `<div class="border dark:border-gray-700 rounded-lg p-4 not-prose">
+                                <div class="font-semibold capitalize dark:text-white mb-2">${escapeHtml(name)}</div>
+                                <div class="text-red-600 dark:text-red-400 text-sm">Error: ${escapeHtml(r.error)}</div>
+                            </div>`;
+                        }
+                        return `<div class="border dark:border-gray-700 rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2 not-prose">
                                 <span class="font-semibold capitalize dark:text-white">${escapeHtml(name)}</span>
-                                ${r.success ? `<span class="text-xs text-gray-500 dark:text-gray-400">${r.latency_ms}ms</span>` : ''}
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">${r.latency_ms}ms</span>
+                                    <button type="button" class="compare-copy text-xs px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300" data-text="${escapeHtml(r.text)}">📋</button>
+                                </div>
                             </div>
-                            <div class="whitespace-pre-line dark:text-gray-200">
-                                ${r.success ? escapeHtml(r.text) : `<span class="text-red-600 dark:text-red-400">Error: ${escapeHtml(r.error)}</span>`}
-                            </div>
-                        </div>
-                    `).join('');
+                            <div class="prose prose-sm dark:prose-invert max-w-none">${renderMarkdown(r.text)}</div>
+                        </div>`;
+                    }).join('');
 
-                    $result.html(`<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${cards}</div>`);
+                    $result.html(`<div class="grid grid-cols-1 md:grid-cols-2 gap-4 not-prose">${cards}</div>`);
                 } catch (err) {
-                    $result.html('<div class="text-red-600 dark:text-red-400">Error: ' + escapeHtml(err.message) + '</div>');
+                    $result.html('<div class="text-red-600 dark:text-red-400 not-prose">Error: ' + escapeHtml(err.message) + '</div>');
+                    showToast(err.message, 'error');
                 } finally {
                     $submitBtn.prop('disabled', false).removeClass('opacity-50 cursor-not-allowed');
                 }
             }
         });
     </script>
-</body>
-
-</html>
+@endsection

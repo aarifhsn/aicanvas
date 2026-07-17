@@ -32,7 +32,16 @@ class GroqProvider implements AIProviderInterface
             throw new \RuntimeException('Groq request failed with status ' . $response->status());
         }
 
-        return $response->json('choices.0.message.content') ?? '';
+        $data = $response->json();
+
+        // Check for API error in response body
+        if (isset($data['error'])) {
+            $errorMessage = $data['error']['message'] ?? 'Unknown Groq API error';
+            Log::error('Groq API error', ['error' => $data['error']]);
+            throw new \RuntimeException('Groq API error: ' . $errorMessage);
+        }
+
+        return $data['choices'][0]['message']['content'] ?? '';
     }
 
     public function stream(string $prompt, array $options = []): \Generator
@@ -65,10 +74,33 @@ class GroqProvider implements AIProviderInterface
                     continue;
 
                 $decoded = json_decode($json, true);
+
+                // Check for API error in stream response
+                if (isset($decoded['error'])) {
+                    $errorMessage = $decoded['error']['message'] ?? 'Unknown Groq API error';
+                    Log::error('Groq stream API error', ['error' => $decoded['error']]);
+                    throw new \RuntimeException('Groq API error: ' . $errorMessage);
+                }
+
                 $text = $decoded['choices'][0]['delta']['content'] ?? '';
 
                 if ($text !== '')
                     yield $text;
+            }
+        }
+
+        // Process any remaining data in buffer
+        $buffer = trim($buffer);
+        if ($buffer && str_starts_with($buffer, 'data: ')) {
+            $json = trim(substr($buffer, 6));
+            if ($json !== '' && $json !== '[DONE]') {
+                $decoded = json_decode($json, true);
+                if (isset($decoded['choices'][0]['delta']['content'])) {
+                    $text = $decoded['choices'][0]['delta']['content'];
+                    if ($text !== '') {
+                        yield $text;
+                    }
+                }
             }
         }
     }

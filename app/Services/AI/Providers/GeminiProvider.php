@@ -33,7 +33,16 @@ class GeminiProvider implements AIProviderInterface
             throw new \RuntimeException('Gemini request failed with status ' . $response->status());
         }
 
-        return $response->json('candidates.0.content.parts.0.text') ?? '';
+        $data = $response->json();
+
+        // Check for API error in response body
+        if (isset($data['error'])) {
+            $errorMessage = $data['error']['message'] ?? 'Unknown Gemini API error';
+            Log::error('Gemini API error', ['error' => $data['error']]);
+            throw new \RuntimeException('Gemini API error: ' . $errorMessage);
+        }
+
+        return $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
     }
 
     public function stream(string $prompt, array $options = []): \Generator
@@ -56,9 +65,12 @@ class GeminiProvider implements AIProviderInterface
         while (!$body->eof()) {
             $buffer .= $body->read(1024);
 
-            while (($pos = strpos($buffer, "\n\n")) !== false) {
-                $chunk = substr($buffer, 0, $pos);
-                $buffer = substr($buffer, $pos + 2);
+            // Handle both \r\n\r\n (standard SSE) and \n\n line endings
+            while (($pos = strpos($buffer, "\r\n\r\n")) !== false) {
+                $chunk = trim(substr($buffer, 0, $pos));
+                $buffer = substr($buffer, $pos + 4);
+
+                Log::debug('SSE raw chunk', ['chunk' => $chunk]);
 
                 if (!str_starts_with($chunk, 'data: ')) {
                     continue;
@@ -70,10 +82,33 @@ class GeminiProvider implements AIProviderInterface
                 }
 
                 $decoded = json_decode($json, true);
+
+                // Check for API error in stream response
+                if (isset($decoded['error'])) {
+                    $errorMessage = $decoded['error']['message'] ?? 'Unknown Gemini API error';
+                    Log::error('Gemini stream API error', ['error' => $decoded['error']]);
+                    throw new \RuntimeException('Gemini API error: ' . $errorMessage);
+                }
+
                 $text = $decoded['candidates'][0]['content']['parts'][0]['text'] ?? '';
 
                 if ($text !== '') {
                     yield $text;
+                }
+            }
+        }
+
+        // Process any remaining data in buffer
+        $buffer = trim($buffer);
+        if ($buffer && str_starts_with($buffer, 'data: ')) {
+            $json = trim(substr($buffer, 6));
+            if ($json !== '' && $json !== '[DONE]') {
+                $decoded = json_decode($json, true);
+                if (isset($decoded['candidates'][0]['content']['parts'][0]['text'])) {
+                    $text = $decoded['candidates'][0]['content']['parts'][0]['text'];
+                    if ($text !== '') {
+                        yield $text;
+                    }
                 }
             }
         }
