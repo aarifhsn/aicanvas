@@ -29,6 +29,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 Route::middleware('auth')->group(function () {
     Route::get('/history', [GenerationController::class, 'index'])->name('history.index');
     Route::delete('/history/{generation}', [GenerationController::class, 'destroy'])->name('history.destroy');
+    Route::post('/theme', [AuthController::class, 'updateTheme'])->name('theme.update');
 
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
     Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');

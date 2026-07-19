@@ -29,10 +29,6 @@ class EmbeddingService
         );
 
         if ($response->failed()) {
-            Log::error('Gemini embedding failed', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
             throw new \RuntimeException('Embedding request failed with status ' . $response->status());
         }
 

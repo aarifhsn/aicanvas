@@ -26,10 +26,7 @@ class GeminiProvider implements AIProviderInterface
         );
 
         if ($response->failed()) {
-            Log::error('Gemini generate failed', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
+
             throw new \RuntimeException('Gemini request failed with status ' . $response->status());
         }
 
@@ -38,7 +35,6 @@ class GeminiProvider implements AIProviderInterface
         // Check for API error in response body
         if (isset($data['error'])) {
             $errorMessage = $data['error']['message'] ?? 'Unknown Gemini API error';
-            Log::error('Gemini API error', ['error' => $data['error']]);
             throw new \RuntimeException('Gemini API error: ' . $errorMessage);
         }
 
@@ -55,7 +51,6 @@ class GeminiProvider implements AIProviderInterface
             );
 
         if ($response->failed()) {
-            Log::error('Gemini stream failed', ['status' => $response->status()]);
             throw new \RuntimeException('Gemini stream failed with status ' . $response->status());
         }
 
@@ -69,8 +64,6 @@ class GeminiProvider implements AIProviderInterface
             while (($pos = strpos($buffer, "\r\n\r\n")) !== false) {
                 $chunk = trim(substr($buffer, 0, $pos));
                 $buffer = substr($buffer, $pos + 4);
-
-                Log::debug('SSE raw chunk', ['chunk' => $chunk]);
 
                 if (!str_starts_with($chunk, 'data: ')) {
                     continue;
@@ -86,7 +79,6 @@ class GeminiProvider implements AIProviderInterface
                 // Check for API error in stream response
                 if (isset($decoded['error'])) {
                     $errorMessage = $decoded['error']['message'] ?? 'Unknown Gemini API error';
-                    Log::error('Gemini stream API error', ['error' => $decoded['error']]);
                     throw new \RuntimeException('Gemini API error: ' . $errorMessage);
                 }
 

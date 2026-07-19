@@ -25,10 +25,6 @@ class GroqProvider implements AIProviderInterface
             ->post("{$this->baseUrl}/chat/completions", $this->payload($prompt, $options));
 
         if ($response->failed()) {
-            Log::error('Groq generate failed', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
             throw new \RuntimeException('Groq request failed with status ' . $response->status());
         }
 
@@ -37,7 +33,6 @@ class GroqProvider implements AIProviderInterface
         // Check for API error in response body
         if (isset($data['error'])) {
             $errorMessage = $data['error']['message'] ?? 'Unknown Groq API error';
-            Log::error('Groq API error', ['error' => $data['error']]);
             throw new \RuntimeException('Groq API error: ' . $errorMessage);
         }
 
@@ -52,7 +47,6 @@ class GroqProvider implements AIProviderInterface
             ->post("{$this->baseUrl}/chat/completions", $this->payload($prompt, $options, stream: true));
 
         if ($response->failed()) {
-            Log::error('Groq stream failed', ['status' => $response->status()]);
             throw new \RuntimeException('Groq stream failed with status ' . $response->status());
         }
 
@@ -78,7 +72,6 @@ class GroqProvider implements AIProviderInterface
                 // Check for API error in stream response
                 if (isset($decoded['error'])) {
                     $errorMessage = $decoded['error']['message'] ?? 'Unknown Groq API error';
-                    Log::error('Groq stream API error', ['error' => $decoded['error']]);
                     throw new \RuntimeException('Groq API error: ' . $errorMessage);
                 }
 

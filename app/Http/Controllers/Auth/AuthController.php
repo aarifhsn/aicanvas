@@ -67,4 +67,15 @@ class AuthController extends Controller
 
         return redirect()->route('ai.index');
     }
+
+    public function updateTheme(Request $request)
+    {
+        $validated = $request->validate([
+            'theme' => 'required|in:light,dark',
+        ]);
+
+        $request->user()->update(['theme' => $validated['theme']]);
+
+        return response()->json(['success' => true, 'theme' => $validated['theme']]);
+    }
 }

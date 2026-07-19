@@ -70,7 +70,6 @@ class DocumentController extends Controller
             return redirect()->route('documents.show', $document)
                 ->with('status', 'Document processed — ' . count($chunks) . ' chunks embedded.');
         } catch (\Exception $e) {
-            Log::error('Document processing failed', ['message' => $e->getMessage()]);
 
             return back()->withErrors(['file' => 'Failed to process document: ' . $e->getMessage()]);
         }
@@ -115,7 +114,6 @@ PROMPT;
                 ]),
             ]);
         } catch (\Exception $e) {
-            Log::error('RAG answer failed', ['message' => $e->getMessage()]);
 
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }

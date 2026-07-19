@@ -12,11 +12,13 @@
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: {} } };
 
-        if (localStorage.getItem('darkMode') === 'true' ||
-            (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        // Initialize theme: prefer server-side saved preference, then localStorage, then system preference
+        const serverTheme = @json(auth()->user()?->theme ?? null);
+        const savedTheme = serverTheme || localStorage.getItem('darkMode') === 'true' ||
+            (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+        if (savedTheme) {
             document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
         }
     </script>
 </head>
@@ -110,6 +112,18 @@
                 const isDarkMode = document.documentElement.classList.toggle('dark');
                 localStorage.setItem('darkMode', isDarkMode);
                 updateDarkModeButton(isDarkMode);
+
+                // Save theme preference to server if authenticated
+                @auth
+                fetch('{{ route('theme.update') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    },
+                    body: JSON.stringify({ theme: isDarkMode ? 'dark' : 'light' })
+                }).catch(() => {}); // Silent fail - localStorage already saved it
+                @endauth
             });
 
             function updateDarkModeButton(isDarkMode) {
